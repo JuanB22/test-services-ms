@@ -1,5 +1,5 @@
 include:
-  - project: checkbox-innovations/gis/tools/test-templates/test-services
+  - project: checkbox-innovations/gis/tools/test-template/test-services
     ref: main
     file:
       - template-services-test.yaml
