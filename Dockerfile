@@ -1,11 +1,15 @@
-# Usar la imagen base de Alpine con Nginx
-FROM nginx:alpine
+# Usamos una imagen ligera de Python
+FROM python:3.9-slim
 
-# Copiar el archivo HTML al directorio predeterminado de Nginx
-COPY index.html /usr/share/nginx/html/
+# Instalamos el conector de MySQL
+RUN pip install pymysql
 
-# Exponer el puerto 80
-EXPOSE 80
+# Establecemos el directorio de trabajo
+WORKDIR /app
 
-# Iniciar Nginx en primer plano
-CMD ["nginx", "-g", "daemon off;"]
+# Copiamos nuestro script
+COPY app.py .
+
+# Ejecutamos el script
+# "-u" hace que los logs salgan inmediatamente en la consola de Kubernetes
+CMD ["python", "-u", "app.py"]
