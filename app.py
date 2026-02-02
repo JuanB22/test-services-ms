@@ -10,7 +10,7 @@ db_user = os.environ.get('DATABASE_USER')      # Usuario
 db_password = os.environ.get('DATABASE_PW')    # Contraseña
 
 # CAMBIO CLAVE: Si no hay variable, usa 'test_db' por defecto, pero intenta leerla.
-db_name = os.environ.get('DATABASE_NAME', 'test_db') 
+db_name = os.environ.get('DATABASE_NAME', 'siges-multiprod-test1') 
 
 print(f"--- INICIANDO PRUEBA DE CONEXION MULTIPROD ---")
 print(f"Target Host: {db_host}")
