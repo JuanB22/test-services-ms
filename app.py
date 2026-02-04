@@ -15,7 +15,7 @@ print(f"Target DB:  {db_name}")
 print(f"User:       {db_user}")
 
 db_hostname = db_host.split(":")[0]
-db_port = db_host.split(":")[1]
+db_port = int(db_host.split(":")[1])
 
 def connect():
     if not db_host or not db_password:
