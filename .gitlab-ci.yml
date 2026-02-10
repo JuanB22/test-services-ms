@@ -116,7 +116,7 @@ Update microservice:
     - .template_update
     - .common_variables
     - .multiprod_variables
-    - .multiprod_stage_list  # <-- MANTENEMOS ESTO (Necesitamos actualizar 15 values.yaml distintos)
+    - .multiprod_stage_list
   needs: ["Build and push image"]
   environment: $STAGE
   rules:
