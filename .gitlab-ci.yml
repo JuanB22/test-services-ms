@@ -106,6 +106,7 @@ Build and push image:
     - .common_variables
     - .multiprod_variables
     # - .multiprod_stage_list  <-- ELIMINAMOS ESTO (Ya no iteramos 15 veces)
+  environment: $STAGE
   # environment: multiprod-build # Un nombre genérico para el entorno de build
   allow_failure: true
   rules:
