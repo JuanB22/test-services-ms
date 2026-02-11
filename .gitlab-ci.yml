@@ -112,13 +112,13 @@ Test:
 Build and push image:
   extends:
     # - .template_build
+    - .aws_oidc_login
     - .common_variables
     - .multiprod_variables
   needs: ["gather_ecr_configs"]
   rules:
     - if: '$CI_COMMIT_TAG'
   script:
-    - *aws_oidc_login
     - docker build -t build-cache-image .
     - !reference [.logic_push_multiprod_loop, script]
 
