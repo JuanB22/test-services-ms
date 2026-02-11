@@ -20,7 +20,9 @@ workflow:
     - |
       if [ ! -f .skip_build ]; then
         echo "--- Starting CUSTOM Build Script ---"
-        docker build -t build-cache-image .
+        docker build -t ${AWS_ECR_IMAGE} --build-arg ENVIRONMENT=${CI_ENVIRONMENT_NAME} .
+        docker tag ${AWS_ECR_IMAGE} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_IMAGE}:${FINAL_IMAGE_TAG}
+        docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_IMAGE}:${FINAL_IMAGE_TAG}
         echo "--- CUSTOM Build Script Finished ---"
       else
         echo "--- CUSTOM Build Script Skipped (Rollback) ---"
