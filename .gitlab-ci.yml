@@ -106,7 +106,7 @@ Build and push image:
     - .common_variables
     - .multiprod_variables
     # - .multiprod_stage_list  <-- ELIMINAMOS ESTO (Ya no iteramos 15 veces)
-  environment: multiprod-build # Un nombre genérico para el entorno de build
+  # environment: multiprod-build # Un nombre genérico para el entorno de build
   allow_failure: true
   rules:
     - if: '$CI_COMMIT_TAG'
