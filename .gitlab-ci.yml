@@ -90,7 +90,7 @@ Update microservice nonprod-demo:
 
 ################# JOBS MULTIPROD ##################
 # 1. Job Recolector (Limpio)
-gather_ecr_configs:
+Gather ECR Configs:
   extends:
     - .logic_gather_ecr
     - .common_variables
@@ -105,11 +105,11 @@ Test:
     - .template_test_java
     - .common_variables
     - .multiprod_variables
-    - .multiprod_stage_list
-  environment: $STAGE
+    # - .multiprod_stage_list
+  # environment: $STAGE
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
+      # when: never
 
 Build and push image:
   stage: build
