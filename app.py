@@ -3,7 +3,6 @@ import time
 import pymysql
 from pymysql import OperationalError
 
-
 db_host = os.environ.get('DATABASE_URL')      
 db_user = os.environ.get('DATABASE_USER')    
 db_password = os.environ.get('DATABASE_PW')   
