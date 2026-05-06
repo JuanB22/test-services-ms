@@ -1,7 +1,7 @@
 import os
 import time
 import pymysql
-from pymysql import OperationalError
+# from pymysql import OperationalError # (Puedes importarlo si lo usas en el except)
 
 db_host = os.environ.get('DATABASE_URL')      
 db_user = os.environ.get('DATABASE_USER')    
@@ -13,15 +13,17 @@ print(f"Target Host: {db_host}")
 print(f"Target DB:  {db_name}")
 print(f"User:       {db_user}")
 
-db_hostname = db_host.split(":")[0]
-db_port = int(db_host.split(":")[1])
-
 def connect():
-    if not db_host or not db_password:
-        print(" ERROR: Faltan variables de entorno (DATABASE_URL o DATABASE_PW).")
+    # 1. Validamos que las variables existan PRIMERO
+    if not db_host or not db_password or not db_user:
+        print(" ERROR: Faltan variables de entorno. Imposible conectar.")
         return False
 
+    # 2. Ahora que sabemos que db_host tiene texto, es seguro cortarlo
     try:
+        db_hostname = db_host.split(":")[0]
+        db_port = int(db_host.split(":")[1])
+        
         conn = pymysql.connect(
             host=db_hostname,
             user=db_user,
@@ -33,8 +35,11 @@ def connect():
         conn.close()
         print(f" ¡EXITO! Conectado correctamente a: {db_host} ({db_name})")
         return True
+    except IndexError:
+        print(" ERROR: El formato de DATABASE_URL es incorrecto. Debe ser 'host:puerto'")
+        return False
     except Exception as e:
-        print(f"ERROR DE CONEXIÓN: {e}")
+        print(f" ERROR DE CONEXIÓN: {e}")
         return False
 
 while True:
