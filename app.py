@@ -3,7 +3,6 @@ import sys
 print("--- Generando .env desde GitLab CI ---")
 try:
     with open('.env', 'w') as f:
-        # Escribimos las variables que le pasa el pipeline
         f.write(f"DATABASE_URL={sys.argv[1]}\n")
         f.write(f"DATABASE_USER={sys.argv[2]}\n")
         f.write(f"DATABASE_PW={sys.argv[3]}\n")
