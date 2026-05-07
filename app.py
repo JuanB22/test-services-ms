@@ -1,14 +1,25 @@
-import sys
+import os
+import time
 
-print("--- Generando .env desde GitLab CI ---")
-try:
-    with open('.env', 'w') as f:
-        f.write(f"DATABASE_URL={sys.argv[1]}\n")
-        f.write(f"DATABASE_USER={sys.argv[2]}\n")
-        f.write(f"DATABASE_PW={sys.argv[3]}\n")
-    print("✅ Archivo .env generado correctamente.")
-except Exception as e:
-    print(f"⚠️ Error al generar .env: {e}")
+# Lee el .env que guardó config-infrastructure.py
+if os.path.exists('.env'):
+    with open('.env') as f:
+        for line in f:
+            if '=' in line and not line.startswith('#'):
+                key, value = line.strip().split('=', 1)
+                os.environ[key] = value
+
+db_url = os.environ.get('DATABASE_URL', 'NO_URL')
+db_user = os.environ.get('DATABASE_USER', 'NO_USER')
+
+print("--- INICIANDO SERVICIO DE PRUEBA ---")
+print(f"URL: {db_url}")
+print(f"USER: {db_user}")
+
+# Mantiene el contenedor vivo para que Kubernetes no lo reinicie
+while True:
+    print("Servicio vivo y escuchando...")
+    time.sleep(10)
 # import os
 # import time
 # import pymysql
