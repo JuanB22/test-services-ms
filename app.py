@@ -1,34 +1,3 @@
-import os
-import time
-import pymysql
-
-# --- CÓDIGO TEMPORAL PARA LEER EL ARCHIVO DE GITLAB CI ---
-def load_env_file():
-    if os.path.exists('.env'):
-        with open('.env') as f:
-            for line in f:
-                if '=' in line and not line.startswith('#'):
-                    key, value = line.strip().split('=', 1)
-                    os.environ[key] = value # Las inyectamos en la memoria
-        print("✅ Variables cargadas desde el archivo .env de GitLab")
-    else:
-        print("⚠️ No se encontró archivo .env")
-
-# Ejecutamos la función antes de leer las variables
-load_env_file()
-# ---------------------------------------------------------
-
-# El resto de tu código queda EXACTAMENTE IGUAL. 
-# os.environ.get ahora encontrará las variables gracias a la función de arriba.
-db_host = os.environ.get('DATABASE_URL')      
-db_user = os.environ.get('DATABASE_USER')    
-db_password = os.environ.get('DATABASE_PW')   
-db_name = os.environ.get('DATABASE_NAME', 'test1DB') 
-
-print(f"--- INICIANDO PRUEBA DE CONEXION MULTIPROD ---")
-print(f"Target Host: {db_host}")
-# ... (sigue tu función connect)
-
 # import os
 # import time
 # import pymysql
