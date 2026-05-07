@@ -2,7 +2,7 @@ include:
   - project: checkbox-innovations/gis/tools/test-template/test-services
     ref: nonprod-dev
     file:
-      - template-services-test.yml
+      - terraform-service-test.yaml
 
 workflow:
   rules:
