@@ -1,8 +1,8 @@
 include:
   - project: checkbox-innovations/gis/tools/test-template/test-services
-    ref: main
+    ref: nonprod-dev
     file:
-      - template-services-test.yaml
+      - template-services.yml
 
 workflow:
   rules:
@@ -19,8 +19,10 @@ workflow:
   script:
     - |
       if [ ! -f .skip_build ]; then
-        echo "--- Starting CUSTOM Build Script ---"
-        docker build -t ${AWS_ECR_IMAGE} --build-arg ENVIRONMENT=${CI_ENVIRONMENT_NAME} .
+        echo "--- Starting Build ---"
+        python3 config-profile.py ${APLICATION_PROFILE}
+        python3 config-infrastructure.py ${DATABASE_URL} ${DATABASE_USER} ${DATABASE_PW} ${AWS_REGION} ${AWS_ACCOUNT_ID} ${PRESCRIPTION_BEARER_TOKEN}
+        docker build -t ${AWS_ECR_IMAGE} --build-arg ENVIRONMENT=${STAGE} .
         docker tag ${AWS_ECR_IMAGE} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_IMAGE}:${FINAL_IMAGE_TAG}
         docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_IMAGE}:${FINAL_IMAGE_TAG}
         echo "--- CUSTOM Build Script Finished ---"
@@ -89,35 +91,25 @@ Update microservice nonprod-demo:
     - if: '$CI_COMMIT_BRANCH == "nonprod-demo"'
 
 ################# JOBS MULTIPROD ##################
-# 1. Job Recolector (Limpio)
-Gather ECR Configs:
-  extends:
-    - .logic_gather_ecr
-    - .common_variables
-    - .multiprod_variables
-    - .multiprod_stage_list
-  environment: $STAGE
-  rules:
-    - if: '$CI_COMMIT_TAG'
-
 Test:
   extends:
     - .template_test_java
     - .common_variables
     - .multiprod_variables
-    # - .multiprod_stage_list
-  # environment: $STAGE
+    - .multiprod_stage_list
+  environment: $STAGE
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      # when: never
+      when: never
 
 Build and push image:
-  stage: build
   extends:
-    - .template_build_unified_multiprod
+    - .template_build
     - .common_variables
     - .multiprod_variables
-  needs: ["Gather ECR Configs"]
+    - .multiprod_stage_list
+  environment: $STAGE
+  allow_failure: true
   rules:
     - if: '$CI_COMMIT_TAG'
 
