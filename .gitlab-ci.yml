@@ -102,7 +102,7 @@ Test:
 Build and push image:
   stage: build
   extends:
-    - .template_build_unified_multiprod
+    - .template_build
     - .common_variables
     - .multiprod_variables
   rules:
