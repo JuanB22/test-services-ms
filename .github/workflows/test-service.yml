@@ -17,7 +17,7 @@ on:
 env:
   APP_NAME: test
   AWS_REGION: us-east-1 # Cambiar por tu región por defecto
-  ECR_REPOSITORY: test-service # Nombre de tu repo en ECR
+  ECR_REPOSITORY: siges-nonprod-dev-test # Nombre de tu repo en ECR
 
 permissions:
   id-token: write # Requerido para AWS OIDC
