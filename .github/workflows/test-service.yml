@@ -1,4 +1,4 @@
-name: Appointment Service CI/CD
+name: Test Service CI/CD
 
 on:
   # Equivale a $CI_PIPELINE_SOURCE == "merge_request_event"
