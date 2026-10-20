@@ -90,8 +90,8 @@ jobs:
             "${{ secrets.AWS_ACCOUNT_ID }}" \
             "${{ secrets.PRESCRIPTION_BEARER_TOKEN }}"
           
-          # Reemplaza los placeholders en application.yml
-          python Config-profile.py "${{ env.PROFILE }}"
+          # # Reemplaza los placeholders en application.yml
+          # python config-profile.py "${{ env.PROFILE }}"
 
       - name: Autenticación AWS (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
