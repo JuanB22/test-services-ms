@@ -1,22 +1,47 @@
 import os
 import time
+import pymysql
+# from pymysql import OperationalError # (Puedes importarlo si lo usas en el except)
 
-# Lee el .env que guardó config-infrastructure.py
-if os.path.exists('.env'):
-    with open('.env') as f:
-        for line in f:
-            if '=' in line and not line.startswith('#'):
-                key, value = line.strip().split('=', 1)
-                os.environ[key] = value
+db_host = os.environ.get('DATABASE_URL')      
+db_user = os.environ.get('DATABASE_USER')    
+db_password = os.environ.get('DATABASE_PW')   
+db_name = os.environ.get('DATABASE_NAME', 'test1DB') 
 
-db_url = os.environ.get('DATABASE_URL', 'NO_URL')
-db_user = os.environ.get('DATABASE_USER', 'NO_USER')
+print(f"--- INICIANDO PRUEBA DE CONEXION MULTIPROD ---")
+print(f"Target Host: {db_host}")
+print(f"Target DB:  {db_name}")
+print(f"User:       {db_user}")
 
-print("--- INICIANDO SERVICIO DE PRUEBA ---")
-print(f"URL: {db_url}")
-print(f"USER: {db_user}")
+def connect():
+    # 1. Validamos que las variables existan PRIMERO
+    if not db_host or not db_password or not db_user:
+        print(" ERROR: Faltan variables de entorno. Imposible conectar.")
+        return False
 
-# Mantiene el contenedor vivo para que Kubernetes no lo reinicie
+    # 2. Ahora que sabemos que db_host tiene texto, es seguro cortarlo
+    try:
+        db_hostname = db_host.split(":")[0]
+        db_port = int(db_host.split(":")[1])
+        
+        conn = pymysql.connect(
+            host=db_hostname,
+            user=db_user,
+            port=db_port,
+            password=db_password,
+            database=db_name,
+            connect_timeout=5
+        )
+        conn.close()
+        print(f" ¡EXITO! Conectado correctamente a: {db_host} ({db_name})")
+        return True
+    except IndexError:
+        print(" ERROR: El formato de DATABASE_URL es incorrecto. Debe ser 'host:puerto'")
+        return False
+    except Exception as e:
+        print(f" ERROR DE CONEXIÓN: {e}")
+        return False
+
 while True:
     print("Servicio vivo y escuchando...")
     time.sleep(10)
