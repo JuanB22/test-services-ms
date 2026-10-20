@@ -92,11 +92,22 @@ jobs:
           
           # # Reemplaza los placeholders en application.yml
           # python config-profile.py "${{ env.PROFILE }}"
+      
+      - name: 🔍 DEBUG - Extraer Token OIDC
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = await core.getIDToken('sts.amazonaws.com');
+            const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+            console.log("=========================================");
+            console.log("Copia este valor en tu StringLike de AWS:");
+            console.log(payload.sub);
+            console.log("=========================================");
 
       - name: Autenticación AWS (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/tu-rol-oidc
+          role-to-assume: arn:aws:iam::211125568768:role/test-service-role-oidc
           role-session-name: GitHubActions-Build-${{ github.run_id }}
           aws-region: ${{ env.AWS_REGION }}
 
