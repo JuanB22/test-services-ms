@@ -82,7 +82,7 @@ jobs:
       - name: Ejecutar scripts de configuración (Python)
         run: |
           # Reemplaza los placeholders en application.properties
-          python config-infraestructure.py \
+          python config-infrastructure.py \
             "${{ secrets.DATABASE_URL }}" \
             "${{ secrets.DATABASE_USER }}" \
             "${{ secrets.DATABASE_PW }}" \
