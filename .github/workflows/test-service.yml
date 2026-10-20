@@ -13,6 +13,32 @@ on:
       # - nonprod-demo
     tags:
       - '*' # Ejecuta en cualquier tag (multiprod)
+      
+  # GATILLO MANUAL (REEMPLAZA EL WHEN: MANUAL)
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Ambiente a afectar'
+        type: choice
+        required: true
+        default: 'nonprod-dev'
+        options: 
+          - nonprod-dev
+          - nonprod-demo
+          - prod
+      accion:
+        description: 'Qué hace este run'
+        type: choice
+        required: true
+        default: 'build (solo compilar y subir imagen)'
+        options:
+          - 'build (solo compilar y subir imagen)'
+          - 'deploy (actualizar microservicio en AWS)'
+      image_tag:
+        description: 'Tag de la imagen a desplegar (ej. hash corto del commit). Solo necesario para deploy.'
+        type: string
+        required: false
+        default: 'latest'
 
 env:
   APP_NAME: test
@@ -46,11 +72,12 @@ jobs:
         run: mvn -f pom.xml test
 
   # ==========================================
-  # 2. BUILD & PUSH A ECR (Ramas y Tags)
+  # 2. BUILD & PUSH A ECR (Automático en Push o Manual)
   # ==========================================
   build-and-push:
     name: Build & Push Image
-    if: github.event_name == 'push'
+    # Corre si es un push automático o si se dispara manual eligiendo 'build'
+    if: github.event_name == 'push' || startsWith(inputs.accion, 'build')
     runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ steps.set-tag.outputs.TAG }}
@@ -58,7 +85,7 @@ jobs:
       - name: Checkout del código
         uses: actions/checkout@v4
 
-      # Definir si es dev, demo o prod dependiendo de la rama/tag
+      # Definir si es dev, demo o prod dependiendo de la rama/tag o del input manual
       - name: Determinar Entorno y Tag
         id: set-tag
         run: |
@@ -67,14 +94,13 @@ jobs:
             echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
             echo "PROFILE=prod" >> $GITHUB_ENV
           else
-            # Extrae el nombre de la rama (nonprod-dev o nonprod-demo)
             BRANCH_NAME=${GITHUB_REF#refs/heads/}
             echo "ENV_NAME=$BRANCH_NAME" >> $GITHUB_ENV
             echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT # Tag corto del commit
             
-            if [[ "$BRANCH_NAME" == "nonprod-dev" ]]; then
+            if [[ "$BRANCH_NAME" == "nonprod-dev" \vert{}\vert{} "${{ inputs.environment }}" == "nonprod-dev" ]]; then
               echo "PROFILE=dev" >> $GITHUB_ENV
-            elif [[ "$BRANCH_NAME" == "nonprod-demo" ]]; then
+            elif [[ "$BRANCH_NAME" == "nonprod-demo" \vert{}\vert{} "${{ inputs.environment }}" == "nonprod-demo" ]]; then
               echo "PROFILE=demo" >> $GITHUB_ENV
             fi
           fi
@@ -124,41 +150,35 @@ jobs:
           docker push $REGISTRY/$ECR_REPOSITORY:$TAG
           echo "Imagen pusheada: $REGISTRY/$ECR_REPOSITORY:$TAG"
 
-
   # ==========================================
-  # 3. UPDATE MICROSERVICE (Despliegue)
+  # 3. UPDATE MICROSERVICE (Únicamente Manual)
   # ==========================================
   deploy:
     name: Update Microservice
-    needs: build-and-push
-    if: github.event_name == 'push'
+    # Corre ÚNICAMENTE cuando presionas el botón manual y eliges 'deploy'
+    if: github.event_name == 'workflow_dispatch' && startsWith(inputs.accion, 'deploy')
     runs-on: ubuntu-latest
     
-    # Asigna el entorno dinámicamente. 
-    # Si es un Tag, le asignará 'multiprod' (o el nombre que uses).
-    # Si es multiprod, debes configurarlo en GitHub Settings para requerir aprobación manual.
-    environment: 
-      name: ${{ startsWith(github.ref, 'refs/tags/') && 'multiprod' || github.ref_name }}
-    
     steps:
-      - name: Checkout del código (Opcional, si el script de deploy lo requiere)
-        uses: actions/checkout@v4
-
       - name: Autenticación AWS (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/tu-rol-oidc
+          # Usando el mismo rol exacto que tienes en el paso de Build
+          role-to-assume: arn:aws:iam::211125568768:role/test-service-role-oidc
           role-session-name: GitHubActions-Deploy-${{ github.run_id }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Actualizar Servicio en AWS (Reemplazo de .template_update)
+      - name: Actualizar Servicio en AWS
         env:
-          IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
+          ENV_NAME: ${{ inputs.environment }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
-          echo "Actualizando microservicio a la versión $IMAGE_TAG..."
+          echo "========================================="
+          echo "Iniciando despliegue manual"
+          echo "Entorno objetivo: $ENV_NAME"
+          echo "Aplicando imagen con tag: $IMAGE_TAG"
+          echo "========================================="
+          
           # AQUÍ DEBES PONER EL COMANDO EXACTO PARA ACTUALIZAR TU SERVICIO
           # Ejemplo para ECS:
-          # aws ecs update-service --cluster tu-cluster --service appointment-service --force-new-deployment
-          
-          # Ejemplo para Kubernetes/EKS:
-          # kubectl set image deployment/appointment appointment=$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          # aws ecs
