@@ -124,6 +124,7 @@ jobs:
           docker push $REGISTRY/$ECR_REPOSITORY:$TAG
           echo "Imagen pusheada: $REGISTRY/$ECR_REPOSITORY:$TAG"
 
+
   # ==========================================
   # 3. UPDATE MICROSERVICE (Despliegue)
   # ==========================================
