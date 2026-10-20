@@ -88,19 +88,21 @@ jobs:
       # Definir si es dev, demo o prod dependiendo de la rama/tag o del input manual
       - name: Determinar Entorno y Tag
         id: set-tag
+        env:
+          INPUT_ENV: ${{ inputs.environment }}
         run: |
-          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             echo "ENV_NAME=prod" >> $GITHUB_ENV
             echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
             echo "PROFILE=prod" >> $GITHUB_ENV
           else
             BRANCH_NAME=${GITHUB_REF#refs/heads/}
             echo "ENV_NAME=$BRANCH_NAME" >> $GITHUB_ENV
-            echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT # Tag corto del commit
+            echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
             
-            if [[ "$BRANCH_NAME" == "nonprod-dev" \vert{}\vert{} "${{ inputs.environment }}" == "nonprod-dev" ]]; then
+            if [ "$BRANCH_NAME" = "nonprod-dev" ] || [ "$INPUT_ENV" = "nonprod-dev" ]; then
               echo "PROFILE=dev" >> $GITHUB_ENV
-            elif [[ "$BRANCH_NAME" == "nonprod-demo" \vert{}\vert{} "${{ inputs.environment }}" == "nonprod-demo" ]]; then
+            elif [ "$BRANCH_NAME" = "nonprod-demo" ] || [ "$INPUT_ENV" = "nonprod-demo" ]; then
               echo "PROFILE=demo" >> $GITHUB_ENV
             fi
           fi
