@@ -115,16 +115,15 @@ jobs:
           echo "Imagen pusheada: $REGISTRY/$ECR_REPOSITORY:$TAG"
 
   # ==========================================
-  # 3. UPDATE MICROSERVICE (Pausa Nativa)
+  # 3. UPDATE MICROSERVICE (NON-PROD - Ramas)
   # ==========================================
-  deploy:
-    name: Update Microservice
+  deploy-nonprod:
+    name: Update Microservice (${{ github.ref_name }})
     needs: build-and-push
-    if: github.event_name == 'push'
+    # Se ejecuta SOLO cuando haces push a una rama (no tags)
+    if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     
-    # Esto vincula el job con la regla de aprobación configurada en GitHub.
-    # Toma automáticamente el nombre de la rama (ej. nonprod-dev).
     environment: 
       name: ${{ github.ref_name }}
     
@@ -133,7 +132,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::211125568768:role/test-service-role-oidc
-          role-session-name: GitHubActions-Deploy-${{ github.run_id }}
+          role-session-name: GitHubActions-DeployNonProd-${{ github.run_id }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Actualizar Servicio en AWS
@@ -142,10 +141,59 @@ jobs:
           IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
         run: |
           echo "========================================="
-          echo "Iniciando despliegue post-aprobación"
+          echo "Iniciando despliegue NON-PROD post-aprobación"
           echo "Entorno objetivo: $ENV_NAME"
           echo "Aplicando imagen con tag: $IMAGE_TAG"
           echo "========================================="
           
           # AQUÍ DEBES PONER EL COMANDO EXACTO PARA ACTUALIZAR TU SERVICIO
           # aws ecs ...
+
+  # ==========================================
+  # 4. UPDATE MICROSERVICE (MULTIPROD - Tags)
+  # ==========================================
+  deploy-prod:
+    name: Deploy Prod (${{ matrix.entorno }})
+    needs: build-and-push
+    # Se ejecuta SOLO cuando pusheas un Tag (ej. v1.7.16.4)
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    
+    # Esto genera un trabajo en paralelo por cada ambiente
+    strategy:
+      fail-fast: false 
+      matrix:
+        entorno: 
+          - agua-oro
+          - cerro-azul
+          - col-tiro
+          - embalse
+          - gral-roca
+          - guati
+          # Puedes agregar o quitar ambientes de esta lista libremente
+    
+    # Vincula dinámicamente cada job a su Entorno respectivo en GitHub Settings
+    environment: 
+      name: ${{ matrix.entorno }}
+    
+    steps:
+      - name: Autenticación AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::211125568768:role/test-service-role-oidc
+          role-session-name: GitHubActions-DeployProd-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Actualizar Servicio en AWS
+        env:
+          ENV_NAME: ${{ matrix.entorno }}
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
+        run: |
+          echo "========================================="
+          echo "Iniciando despliegue PROD post-aprobación"
+          echo "Entorno objetivo: $ENV_NAME"
+          echo "Aplicando imagen con tag: $IMAGE_TAG"
+          echo "========================================="
+          
+          # Dependiendo del ambiente, usas $ENV_NAME en tu comando
+          # aws ecs update-service --cluster cluster-$ENV_NAME --service appointment-service --force-new-deployment
